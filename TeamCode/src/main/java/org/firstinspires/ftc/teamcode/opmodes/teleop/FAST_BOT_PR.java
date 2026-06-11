@@ -1,8 +1,9 @@
-package org.firstinspires.ftc.teamcode.offseason;
+package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -19,6 +20,7 @@ import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
  * Uses PIDF controllers to manage motor movements for precise positioning.
  */
 @Config
+@Configurable
 @TeleOp
 public class FAST_BOT_PR extends LinearOpMode {
 

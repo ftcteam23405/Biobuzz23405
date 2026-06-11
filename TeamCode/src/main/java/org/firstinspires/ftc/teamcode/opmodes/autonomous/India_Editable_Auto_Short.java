@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode.offseason;
+package org.firstinspires.ftc.teamcode.opmodes.autonomous;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -11,9 +12,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
 
 @Autonomous
+@Configurable
 @Config
-
-public class India_Editable_Auto extends LinearOpMode {
+public class India_Editable_Auto_Short extends LinearOpMode  {
 
     public static double MAX_ARM_POWER = 0.7;
     public static int ARM_INITIAL_ANGLE = 90; //deg
@@ -22,7 +23,11 @@ public class India_Editable_Auto extends LinearOpMode {
     public static double INTAKE_POWER = 0.75;
     public static double OUTTAKE_POWER = 1;
     public static int OUTTAKE_POS = 500;
-    public static double DRIVETRAIN_POWER = 0.75;
+    public static double DRIVETRAIN_POWER = 0.3;
+
+    public static double DRIVE_TIME = 1.25;
+    public static double TURN_TIME = 0.6;
+
     private PIDFMotorController armController;
     private DcMotor rightMotor, leftMotor;
     private com.qualcomm.robotcore.hardware.CRServo intakeServo;
@@ -44,7 +49,10 @@ public class India_Editable_Auto extends LinearOpMode {
 
         DcMotorEx intakeArmMotor = hardwareMap.get(DcMotorEx.class, "intakeArmMotor");
 
-        intakeServo = hardwareMap.get(CRServo .class, "intakeServo");
+        intakeArmMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intakeArmMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
 
         final double armTicksInDegrees = 537.7 / 360.0;
 
@@ -76,10 +84,18 @@ public class India_Editable_Auto extends LinearOpMode {
         waitForStart();
 
         armController.setTargetPosition(ARM_UP_POSITION);
-        forward(DRIVETRAIN_POWER,1);
-        turnLeft(DRIVETRAIN_POWER,1);
+        forward(DRIVETRAIN_POWER, DRIVE_TIME);
         stopDriving();
+        sleep(1000);
+        turnLeft(DRIVETRAIN_POWER,TURN_TIME);
+        stopDriving();
+        sleep(1000);
         outtakePreload();
+        outtakeEnd();
+        turnLeft(-DRIVETRAIN_POWER,TURN_TIME);
+        stopDriving();
+        sleep(1000);
+        backward(DRIVETRAIN_POWER, DRIVE_TIME);
 
         pidThreadRunning = false;
         pidThread.join();
@@ -87,32 +103,32 @@ public class India_Editable_Auto extends LinearOpMode {
 
 
     //functions for driving, can be edited
-    public void backward(double power,long seconds) {
+    public void backward(double power, double seconds) {
         leftMotor.setPower(power);
         rightMotor.setPower(power);
-        sleep((seconds * 1000));
+        sleep((long)(seconds * 1000));
         stopDriving();
 
     }
 
-    public void forward(double power, long seconds) {
+    public void forward(double power, double seconds) {
         leftMotor.setPower(-power);
         rightMotor.setPower(-power);
-        sleep((seconds * 1000));
+        sleep( (long) (seconds * 1000));
         stopDriving();
     }
 
-    public void turnRight(double power, long seconds) {
+    public void turnRight(double power, double seconds) {
         leftMotor.setPower(power);
         rightMotor.setPower(-power);
-        sleep((seconds * 1000));
+        sleep((long)(seconds * 1000));
         stopDriving();
     }
 
-    public void turnLeft(double power, long seconds) {
+    public void turnLeft(double power, double seconds) {
         leftMotor.setPower(-power);
         rightMotor.setPower(power);
-        sleep((seconds * 1000));
+        sleep((long)(seconds * 1000));
         stopDriving();
     }
 
@@ -128,4 +144,10 @@ public class India_Editable_Auto extends LinearOpMode {
         sleep(2000);
         intakeServo.setPower(0);
     }
+
+    public void outtakeEnd(){
+        armController.setTargetPosition(ARM_UP_POSITION);
+        sleep(1000);
+    }
+
 }
