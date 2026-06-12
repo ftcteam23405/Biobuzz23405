@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
 
@@ -16,13 +17,8 @@ import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
 @Config
 public class India_Editable_Auto_Short extends LinearOpMode  {
 
-    public static double MAX_ARM_POWER = 0.7;
-    public static int ARM_INITIAL_ANGLE = 90; //deg
-    public static int ARM_INTAKE_POSITION = 2250;
-    public static int ARM_UP_POSITION = 0;
-    public static double INTAKE_POWER = 0.75;
-    public static double OUTTAKE_POWER = 1;
-    public static int OUTTAKE_POS = 500;
+    public static double GATE_OPEN_POS = 0;
+    public static double GATE_CLOSE_POS = 0;
     public static double DRIVETRAIN_POWER = 0.3;
 
     public static double DRIVE_TIME = 1.25;
@@ -30,7 +26,7 @@ public class India_Editable_Auto_Short extends LinearOpMode  {
 
     private PIDFMotorController armController;
     private DcMotor rightMotor, leftMotor;
-    private com.qualcomm.robotcore.hardware.CRServo intakeServo;
+    private Servo gateServo;
 
     private Thread pidThread;
     private volatile boolean pidThreadRunning = true;
@@ -47,58 +43,22 @@ public class India_Editable_Auto_Short extends LinearOpMode  {
         rightMotor = hardwareMap.dcMotor.get("rightMotor");
         leftMotor = hardwareMap.dcMotor.get("leftMotor");
 
-        DcMotorEx intakeArmMotor = hardwareMap.get(DcMotorEx.class, "intakeArmMotor");
-
-        intakeArmMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        intakeArmMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
-
-        final double armTicksInDegrees = 537.7 / 360.0;
-
-        // Initialize PIDF controllers for the arm
-        armController = new PIDFMotorController(intakeArmMotor, 0.01, 0.2, 0.0005, 0.4, armTicksInDegrees, MAX_ARM_POWER, ARM_INITIAL_ANGLE);
+        gateServo = hardwareMap.get(Servo.class, "gateServo");
 
         // Set directions for drivetrain motors
         leftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        intakeArmMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
-        pidThread = new Thread(() -> {
-            while (pidThreadRunning && !isStopRequested()) {
-                runPIDIterations();
-                telemetry.update();
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        });
-
-        pidThread.start();
         waitForStart();
 
-        armController.setTargetPosition(ARM_UP_POSITION);
+        gateOpen();
         forward(DRIVETRAIN_POWER, DRIVE_TIME);
+        turnLeft(DRIVETRAIN_POWER, TURN_TIME);
         stopDriving();
-        sleep(1000);
-        turnLeft(DRIVETRAIN_POWER,TURN_TIME);
-        stopDriving();
-        sleep(1000);
-        outtakePreload();
-        outtakeEnd();
-        turnLeft(-DRIVETRAIN_POWER,TURN_TIME);
-        stopDriving();
-        sleep(1000);
-        backward(DRIVETRAIN_POWER, DRIVE_TIME);
-
-        pidThreadRunning = false;
-        pidThread.join();
+        gateClose();
     }
 
 
@@ -137,17 +97,12 @@ public class India_Editable_Auto_Short extends LinearOpMode  {
         rightMotor.setPower(0);
     }
 
-    public void outtakePreload(){
-        armController.setTargetPosition(OUTTAKE_POS);
-        sleep(1000);
-        intakeServo.setPower(OUTTAKE_POWER);
-        sleep(2000);
-        intakeServo.setPower(0);
+    public void gateClose(){
+        gateServo.setPosition(GATE_CLOSE_POS);
     }
 
-    public void outtakeEnd(){
-        armController.setTargetPosition(ARM_UP_POSITION);
-        sleep(1000);
+    public void gateOpen(){
+        gateServo.setPosition(GATE_OPEN_POS);
     }
 
 }
