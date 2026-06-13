@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
+import static org.firstinspires.ftc.teamcode.tuning.Globals.*;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -26,8 +28,6 @@ import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
 @TeleOp
 public class India_PR_Bot extends LinearOpMode {
 
-    public static double GATE_OPEN_POS = 0;
-    public static double GATE_CLOSE_POS = 0;
 
     private DcMotor rightMotor, leftMotor;
     private Servo gateServo;
@@ -89,8 +89,8 @@ public class India_PR_Bot extends LinearOpMode {
         double y = (gamepad1.left_stick_y) / 2; // Remember, Y stick is reversed!
         double rx = (gamepad1.left_stick_x) / 2;
 
-        leftMotor.setPower(y + rx);
-        rightMotor.setPower(y - rx);
+        leftMotor.setPower(y - rx);
+        rightMotor.setPower(y + rx);
     }
 
     private void gateControl() {

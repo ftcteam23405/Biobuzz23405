@@ -11,14 +11,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
-
+import static org.firstinspires.ftc.teamcode.tuning.Globals.*;
 @Autonomous
 @Configurable
 @Config
 public class India_Editable_Auto_Short extends LinearOpMode  {
 
-    public static double GATE_OPEN_POS = 0;
-    public static double GATE_CLOSE_POS = 0;
     public static double DRIVETRAIN_POWER = 0.3;
 
     public static double DRIVE_TIME = 1.25;
@@ -54,10 +52,10 @@ public class India_Editable_Auto_Short extends LinearOpMode  {
 
         waitForStart();
 
+        gateClose();
         gateOpen();
         forward(DRIVETRAIN_POWER, DRIVE_TIME);
         turnLeft(DRIVETRAIN_POWER, TURN_TIME);
-        stopDriving();
         gateClose();
     }
 
@@ -79,15 +77,15 @@ public class India_Editable_Auto_Short extends LinearOpMode  {
     }
 
     public void turnRight(double power, double seconds) {
-        leftMotor.setPower(power);
-        rightMotor.setPower(-power);
+        leftMotor.setPower(-power);
+        rightMotor.setPower(power);
         sleep((long)(seconds * 1000));
         stopDriving();
     }
 
     public void turnLeft(double power, double seconds) {
-        leftMotor.setPower(-power);
-        rightMotor.setPower(power);
+        leftMotor.setPower(power);
+        rightMotor.setPower(-power);
         sleep((long)(seconds * 1000));
         stopDriving();
     }
@@ -98,11 +96,15 @@ public class India_Editable_Auto_Short extends LinearOpMode  {
     }
 
     public void gateClose(){
+        sleep(500);
         gateServo.setPosition(GATE_CLOSE_POS);
+        sleep(500);
     }
 
     public void gateOpen(){
+        sleep(500);
         gateServo.setPosition(GATE_OPEN_POS);
+        sleep(500);
     }
 
 }

@@ -4,6 +4,10 @@ import com.bylazar.configurables.annotations.Configurable;
 
 @Configurable
 public class Globals {
+
+    public static double GATE_OPEN_POS = 0.14;
+    public static double GATE_CLOSE_POS = 0.47;
+
     public static double intakeP = 0.01;
     public static double intakeI = 0;
     public static double intakeD = 0.005;

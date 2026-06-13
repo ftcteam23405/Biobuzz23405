@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
-
+import static org.firstinspires.ftc.teamcode.tuning.Globals.*;
 /**
  * TeleOp mode for controlling the robot. Integrates driving, arm, slide, and intake systems.
  * Uses PIDF controllers to manage motor movements for precise positioning.
@@ -25,9 +25,6 @@ import org.firstinspires.ftc.teamcode.tuning.PIDFMotorController;
 @Configurable
 @TeleOp
 public class FAST_BOT_PR extends LinearOpMode {
-
-    public static double GATE_OPEN_POS = 0;
-    public static double GATE_CLOSE_POS = 0;
 
     private DcMotor rightMotor, leftMotor;
     private Servo gateServo;
@@ -89,8 +86,8 @@ public class FAST_BOT_PR extends LinearOpMode {
         double y = (gamepad1.left_stick_y); // Remember, Y stick is reversed!
         double rx = (gamepad1.left_stick_x);
 
-        leftMotor.setPower(y + rx);
-        rightMotor.setPower(y - rx);
+        leftMotor.setPower(y - rx);
+        rightMotor.setPower(y + rx);
     }
 
     private void gateControl() {

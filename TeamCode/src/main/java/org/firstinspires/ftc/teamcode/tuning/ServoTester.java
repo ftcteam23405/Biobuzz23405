@@ -11,12 +11,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class ServoTester extends LinearOpMode {
     public static double WRIST_SERVO_POSITION = 0;
     public void runOpMode() throws InterruptedException {
-        final Servo transferPusher;
-        transferPusher = hardwareMap.get(Servo.class, "transferPusher");
+        final Servo gateServo;
+        gateServo = hardwareMap.get(Servo.class, "gateServo");
         waitForStart();
 
         while(opModeIsActive()){
-            transferPusher.setPosition(WRIST_SERVO_POSITION);
+            gateServo.setPosition(WRIST_SERVO_POSITION);
         }
     }
 
