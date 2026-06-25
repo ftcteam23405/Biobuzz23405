@@ -34,6 +34,8 @@ public class Slides {
         leftSlideMotor = hardwareMap.get(DcMotorEx.class, "sl");
         rightSlideMotor = hardwareMap.get(DcMotorEx.class, "sr");
 
+        leftSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
