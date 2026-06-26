@@ -4,6 +4,7 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+//CommandOpMode to have internal Command Scheduling
 public abstract class CommandOpMode extends OpMode {
     /**
      * Cancels all previous commands

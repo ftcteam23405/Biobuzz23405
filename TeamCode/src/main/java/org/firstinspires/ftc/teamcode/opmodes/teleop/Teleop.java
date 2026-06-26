@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.commandbase.Robot;
 
 @Config
 @Configurable
+//one single Teleop Class that handles all Teleop Commands, then added alliance through constructor
 public class Teleop extends CommandOpMode {
 
     MultipleTelemetry multipleTelemetry;
@@ -30,7 +31,7 @@ public class Teleop extends CommandOpMode {
     }
 
     @Override
-    public void init() {
+    public void init() { //what happens at initialization
         robot = new Robot(hardwareMap, alliance);
         robot.follower.setStartingPose(defaultPose);
 
@@ -38,20 +39,20 @@ public class Teleop extends CommandOpMode {
     }
 
     @Override
-    public void init_loop() {
+    public void init_loop() { //what happens when looping on init
         if (gamepad1.xWasPressed()) {
             robot.slides.resetSlides();
         }
     }
 
     @Override
-    public void start() {
+    public void start() { //what happens when start is pressed
         robot.periodic();
         robot.follower.startTeleOpDrive(true);
     }
 
     @Override
-    public void loop() {
+    public void loop() { //what happens during the whole match - what runs in the background
         robot.periodic();
 
         //if the robot is not holding position, run the Teleop Drive
@@ -83,7 +84,7 @@ public class Teleop extends CommandOpMode {
     }
 
     @Override
-    public void stop() {
+    public void stop() { //what happens when stop button is clicked
         robot.saveEnd();
     }
 

@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import java.util.List;
 
 //class where all robot mechanisms and routines are handled
-
+// Structure: Subsystems & Commands -> Robot Class -> Teleop
 public class Robot {
     public final Intake intake;
     public final Limelight limelight;
@@ -54,7 +54,7 @@ public class Robot {
     public void periodic() {
         loops++;
 
-        if (loops > 10) {
+        if (loops > 10) { //for ref, 50hz is a solid loop time
             double now = loop.getElapsedTime();
             loopTime = (now - lastLoop) / loops;
             lastLoop = now;
