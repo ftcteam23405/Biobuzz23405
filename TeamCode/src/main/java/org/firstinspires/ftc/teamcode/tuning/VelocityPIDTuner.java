@@ -35,7 +35,7 @@ public class VelocityPIDTuner extends NextFTCOpMode {
     public static double d = shooterD;
     public static double ff = shooterFF;
 
-    public static double tolerence = shooterVelTolerance;
+    public static double tolerance = 30;
     private static double shooterPower;
 
     public static PIDCoefficients coefficients = new PIDCoefficients(p, i, d);
@@ -80,7 +80,7 @@ public class VelocityPIDTuner extends NextFTCOpMode {
                 0
         ));
 
-        if (Math.abs(motorRPM - targetRPM) >= tolerence) {
+        if (Math.abs(motorRPM - targetRPM) >= tolerance) {
             shooterPower = controller.calculate(new KineticState(0, aveRPM, 0));
         }
 
