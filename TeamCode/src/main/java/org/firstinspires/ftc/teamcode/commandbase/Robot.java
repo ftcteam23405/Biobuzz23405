@@ -69,6 +69,10 @@ public class Robot {
         defaultPose = follower.getPose();
     }
 
+    public void resetHeading() {
+        follower.setPose(follower.getPose().withHeading(alliance == Alliance.BLUE ? Math.toRadians(180) : 0));
+    }
+
     public CommandBuilder intake() {
         return sequential(
                 latch.down(),

@@ -24,7 +24,7 @@ public class Teleop extends CommandOpMode {
     final Alliance alliance;
 
     public boolean hold = false;
-    public double intakeOn = 0, dist, speed = 1;
+    public double speed = 1;
 
     public Teleop(Alliance alliance) {
         this.alliance = alliance;
@@ -48,6 +48,7 @@ public class Teleop extends CommandOpMode {
     @Override
     public void start() { //what happens when start is pressed
         robot.periodic();
+        robot.limelight.start();
         robot.follower.startTeleOpDrive(true);
     }
 
@@ -61,6 +62,8 @@ public class Teleop extends CommandOpMode {
             robot.follower.setTeleOpDrive(speed * -gamepad1.left_stick_y, speed * -gamepad1.left_stick_x, speed * -gamepad1.right_stick_x, false, robot.alliance == Alliance.BLUE ? Math.toRadians(180) : 0);
         }
 
+        if (gamepad1.startWasPressed())
+            robot.resetHeading();
 
         if (gamepad1.xWasPressed())
             robot.slides.resetSlides();
