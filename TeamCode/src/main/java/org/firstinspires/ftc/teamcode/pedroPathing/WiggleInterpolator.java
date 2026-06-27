@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.PathPoint;
-
-import dev.nextftc.extensions.pedro.PedroComponent;
 
 public class WiggleInterpolator implements HeadingInterpolator {
 
@@ -22,7 +22,7 @@ public class WiggleInterpolator implements HeadingInterpolator {
 
     @Override
     public double interpolate(PathPoint closestPoint) {
-        if (Math.abs(PedroComponent.follower().getVelocity().getMagnitude()) < StuckSpeedThreshold){
+        if (Math.abs(follower.getVelocity().getMagnitude()) < StuckSpeedThreshold){
             return constantHeading +  Math.toRadians(angleBump);
         } else {
             return constantHeading;
