@@ -99,6 +99,8 @@ public class Teleop extends CommandOpMode {
         multipleTelemetry.addData("Right Slide Pos", robot.slides.getRightPosition());
         multipleTelemetry.addData("Left Slide Pos", robot.slides.getLeftPosition());
         multipleTelemetry.addData("Slides Target", robot.slides.getTarget());
+        multipleTelemetry.addData("Right Slide Current", robot.slides.getRightCurrent());
+        multipleTelemetry.addData("Left Slide Current", robot.slides.getLeftCurrent());
         multipleTelemetry.addData("Latch Closed", robot.latch.isDown());
         multipleTelemetry.addData("Hold Position", hold);
         multipleTelemetry.update();
