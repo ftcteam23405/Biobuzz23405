@@ -121,11 +121,11 @@ public class Slides {
         return rightSlideMotor.getVelocity();
     }
 
-    public String getLeftCurrent() {
-        return "Left Slide Motor: " + leftSlideMotor.getCurrent(CurrentUnit.AMPS);
+    public double getLeftCurrent() {
+        return leftSlideMotor.getCurrent(CurrentUnit.AMPS);
     }
 
-    public String getRightCurrent() {
-        return "Right Slide Motor: " + rightSlideMotor.getCurrent(CurrentUnit.AMPS);
+    public double getRightCurrent() {
+        return rightSlideMotor.getCurrent(CurrentUnit.AMPS);
     }
 }
