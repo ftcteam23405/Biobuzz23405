@@ -34,6 +34,8 @@ public class Slides {
         leftSlideMotor = hardwareMap.get(DcMotorEx.class, "sl");
         rightSlideMotor = hardwareMap.get(DcMotorEx.class, "sr");
 
+        leftSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -119,11 +121,11 @@ public class Slides {
         return rightSlideMotor.getVelocity();
     }
 
-    public String getLeftCurrent() {
-        return "Left Slide Motor: " + leftSlideMotor.getCurrent(CurrentUnit.AMPS);
+    public double getLeftCurrent() {
+        return leftSlideMotor.getCurrent(CurrentUnit.AMPS);
     }
 
-    public String getRightCurrent() {
-        return "Right Slide Motor: " + rightSlideMotor.getCurrent(CurrentUnit.AMPS);
+    public double getRightCurrent() {
+        return rightSlideMotor.getCurrent(CurrentUnit.AMPS);
     }
 }

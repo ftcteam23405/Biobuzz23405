@@ -1,0 +1,37 @@
+package org.firstinspires.ftc.teamcode.commandbase;
+
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.Scheduler;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
+//CommandOpMode to have internal Command Scheduling
+public abstract class CommandOpMode extends OpMode {
+    /**
+     * Cancels all previous commands
+     */
+    public void reset() {
+        Scheduler.reset();
+    }
+
+    /**
+     * Schedules objects to the scheduler
+     */
+    public void schedule(Command... commands) {
+        Scheduler.schedule(commands);
+    }
+
+    @Override
+    public void init() {
+    }
+
+    @Override
+    public void loop() {
+        Scheduler.execute();
+    }
+
+    @Override
+    public void stop() {
+        reset();
+    }
+
+}

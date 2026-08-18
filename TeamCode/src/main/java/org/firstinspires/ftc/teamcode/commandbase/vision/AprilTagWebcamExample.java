@@ -2,25 +2,24 @@ package org.firstinspires.ftc.teamcode.commandbase.vision;
 
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-import dev.nextftc.ftc.NextFTCOpMode;
-
 @Autonomous
-public class AprilTagWebcamExample extends NextFTCOpMode {
+public class AprilTagWebcamExample extends OpMode {
 
     AprilTagWebcam aprilTagWebcam = new AprilTagWebcam();
 
     private TelemetryManager telemetryM;
 
     @Override
-    public void onInit() {
+    public void init() {
         aprilTagWebcam.initalize(hardwareMap, telemetryM);
     }
 
     @Override
-    public void onUpdate() {
+    public void loop() {
         //update vision portal
         aprilTagWebcam.update();
         AprilTagDetection id20 = aprilTagWebcam.getTagBySpecificID(20);
@@ -30,7 +29,7 @@ public class AprilTagWebcamExample extends NextFTCOpMode {
     }
 
     @Override
-    public void onStop() {
+    public void stop() {
         aprilTagWebcam.stop();
     }
 }
