@@ -55,7 +55,7 @@ public class Teleop extends CommandOpMode {
     @Override
     public void loop() { //what happens during the whole match - what runs in the background
         robot.periodic();
-
+        super.loop();
         //if the robot is not holding position, run the Teleop Drive
         //if the alliance is Blue, then set the offset heading to PI rad. If not, then keep it 0 (for red)
         if (!hold) {
@@ -89,6 +89,7 @@ public class Teleop extends CommandOpMode {
     @Override
     public void stop() { //what happens when stop button is clicked
         robot.saveEnd();
+        super.stop();
     }
 
     public void updateTelemetry() {

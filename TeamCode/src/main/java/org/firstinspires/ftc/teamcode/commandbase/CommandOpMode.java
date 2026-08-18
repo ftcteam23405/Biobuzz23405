@@ -29,6 +29,7 @@ public abstract class CommandOpMode extends OpMode {
         Scheduler.execute();
     }
 
+    @Override
     public void stop() {
         reset();
     }
