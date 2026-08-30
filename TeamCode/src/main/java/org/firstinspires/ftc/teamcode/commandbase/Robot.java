@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Latch;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
+import org.firstinspires.ftc.teamcode.commandbase.subsystems.SlideArm;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Slides;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -22,7 +23,7 @@ import java.util.List;
 // Structure: Subsystems & Commands -> Robot Class -> Teleop
 public class Robot {
     public final Intake intake;
-    public final Limelight limelight;
+    public final SlideArm slideArm;
     public final Latch latch;
     public final Slides slides;
     public final Follower follower;
@@ -36,9 +37,9 @@ public class Robot {
     public Robot(HardwareMap hardwareMap, Alliance alliance) {
         this.alliance = alliance;
         intake = new Intake(hardwareMap);
-        limelight = new Limelight(hardwareMap, alliance);
         latch = new Latch(hardwareMap);
         slides = new Slides(hardwareMap);
+        slideArm = new SlideArm(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
 
         hubs = hardwareMap.getAll(LynxModule.class);
@@ -75,9 +76,8 @@ public class Robot {
 
     public CommandBuilder intake() {
         return sequential(
-                latch.down(),
-                intake.on(),
-                Commands.waitMs(500)
+                latch.up(),
+                intake.on()
         );
     }
 

@@ -48,7 +48,6 @@ public class Teleop extends CommandOpMode {
     @Override
     public void start() { //what happens when start is pressed
         robot.periodic();
-        robot.limelight.start();
         robot.follower.startTeleOpDrive(true);
     }
 
@@ -65,23 +64,35 @@ public class Teleop extends CommandOpMode {
         if (gamepad1.startWasPressed())
             robot.resetHeading();
 
-        if (gamepad1.xWasPressed())
+        if (gamepad1.backWasPressed())
             robot.slides.resetSlides();
+
+        if (gamepad1.dpadUpWasPressed())
+            robot.slides.up();
+        if (gamepad1.dpadDownWasPressed())
+            robot.slides.down();
+
+        if (gamepad1.rightBumperWasPressed())
+            robot.slideArm.toDeposit();
+        if (gamepad1.leftBumperWasPressed())
+            robot.slideArm.toIntake();
+
+        if (gamepad1.xWasPressed())
+            robot.latch.up();
+        if (gamepad1.aWasPressed())
+            robot.latch.down();
+
 
         if (gamepad1.left_bumper)
             speed = 0.5;
         else
             speed = 1.0;
 
-        if (gamepad1.yWasPressed()) {
-            hold = !hold;
+        if (gamepad1.yWasPressed())
+            robot.intake.intakeOn();
+        if (gamepad1.aWasPressed())
+            robot.intake.intakeOff();
 
-            if (hold) {
-                robot.follower.holdPoint(new BezierPoint(robot.follower.getPose()), robot.follower.getHeading(), false);
-            } else {
-                robot.follower.startTeleopDrive();
-            }
-        }
         updateTelemetry();
 
     }

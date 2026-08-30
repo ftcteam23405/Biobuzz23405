@@ -8,14 +8,20 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Configurable
 @TeleOp
 public class ServoTester extends LinearOpMode {
-    public static double WRIST_SERVO_POSITION = 0;
+    public static double armPos = 0.5 ;
+    public static double latchPos = 0.5;
     public void runOpMode() throws InterruptedException {
-        final Servo gateServo;
-        gateServo = hardwareMap.get(Servo.class, "gateServo");
+        final Servo rightArmServo, leftArmServo, latchServo;
+        rightArmServo = hardwareMap.get(Servo.class, "rightArmServo");
+        leftArmServo = hardwareMap.get(Servo.class, "leftArmServo");
+        latchServo = hardwareMap.get(Servo.class, "latchServo");
         waitForStart();
 
+
         while(opModeIsActive()){
-            gateServo.setPosition(WRIST_SERVO_POSITION);
+            latchServo.setPosition(latchPos);
+            rightArmServo.setPosition(1 - armPos);
+            leftArmServo.setPosition(armPos);
         }
     }
 
