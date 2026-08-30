@@ -74,7 +74,7 @@ public class Robot {
         follower.setPose(follower.getPose().withHeading(alliance == Alliance.BLUE ? Math.toRadians(180) : 0));
     }
 
-    public CommandBuilder intake() { // example combining commands from different subsystems
+    public CommandBuilder intake() {
         return sequential(
                 latch.up(),
                 intake.on()
