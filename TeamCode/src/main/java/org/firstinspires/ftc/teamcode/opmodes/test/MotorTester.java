@@ -12,12 +12,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp
 public class MotorTester extends LinearOpMode {
 
-    public static double speed = 0.8;
+    public static double speed;
     public void runOpMode() throws InterruptedException {
         final DcMotorEx motor;
         motor = hardwareMap.get(DcMotorEx.class, "motor");
-        motor.setDirection(DcMotorSimple.Direction.REVERSE);
         waitForStart();
+
+        speed = -gamepad1.left_stick_y;
 
         while(opModeIsActive()){
             motor.setPower(speed);

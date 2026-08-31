@@ -7,7 +7,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
-import com.pedropathing.geometry.BezierPoint;
 
 import org.firstinspires.ftc.teamcode.commandbase.Alliance;
 import org.firstinspires.ftc.teamcode.commandbase.CommandOpMode;
@@ -78,9 +77,9 @@ public class Teleop extends CommandOpMode {
             robot.slideArm.toIntake();
 
         if (gamepad1.xWasPressed())
-            robot.latch.up();
+            robot.latch.toOpenPos();
         if (gamepad1.aWasPressed())
-            robot.latch.down();
+            robot.latch.toClosePos();
 
 
         if (gamepad1.left_bumper)
@@ -113,7 +112,7 @@ public class Teleop extends CommandOpMode {
         multipleTelemetry.addData("Slides Target", robot.slides.getTarget());
         multipleTelemetry.addData("Right Slide Current", robot.slides.getRightCurrent());
         multipleTelemetry.addData("Left Slide Current", robot.slides.getLeftCurrent());
-        multipleTelemetry.addData("Latch Closed", robot.latch.isDown());
+        multipleTelemetry.addData("Latch Closed", robot.latch.isOpen());
         multipleTelemetry.addData("Hold Position", hold);
         multipleTelemetry.update();
     }

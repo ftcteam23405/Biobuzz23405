@@ -5,14 +5,12 @@ import static com.pedropathing.ivy.groups.Groups.*;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.CommandBuilder;
-import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Latch;
-import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.SlideArm;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Slides;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -76,7 +74,7 @@ public class Robot {
 
     public CommandBuilder intake() {
         return sequential(
-                latch.up(),
+                latch.toOpenPos(),
                 intake.on()
         );
     }

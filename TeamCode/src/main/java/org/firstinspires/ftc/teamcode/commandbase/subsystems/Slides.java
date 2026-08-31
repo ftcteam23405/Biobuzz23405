@@ -19,7 +19,7 @@ public class Slides {
     private double error = 0, power = 0;
     private DcMotorEx rightSlideMotor, leftSlideMotor;
 
-    private double target = 0;
+    private double target;
     private PIDFController fastController, slowController; // PIDFController for slides
 
     public static double pidfSwitch = 30; // target tolerance for turret
@@ -34,8 +34,6 @@ public class Slides {
         leftSlideMotor = hardwareMap.get(DcMotorEx.class, "sl");
         rightSlideMotor = hardwareMap.get(DcMotorEx.class, "sr");
 
-        leftSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightSlideMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -44,8 +42,7 @@ public class Slides {
 
         leftSlideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        leftSlideMotor.setPower(0);
-        rightSlideMotor.setPower(0);
+        power = 0;
 
         target = 0;
 
