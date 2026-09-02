@@ -1,11 +1,14 @@
 package org.firstinspires.ftc.teamcode.commandbase.subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import static com.pedropathing.ivy.groups.Groups.*;
 
-
+@Configurable
+@Config
 public class SlideArm {
 
     private Servo leftArmServo;
