@@ -18,10 +18,11 @@ public class MotorTester extends LinearOpMode {
         motor = hardwareMap.get(DcMotorEx.class, "motor");
         waitForStart();
 
-        speed = -gamepad1.left_stick_y;
-
         while(opModeIsActive()){
+            speed = -gamepad1.left_stick_y;
             motor.setPower(speed);
+            telemetry.addData("Motor Power", motor.getPower());
+            telemetry.update();
         }
     }
 }
