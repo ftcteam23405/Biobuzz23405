@@ -40,7 +40,6 @@ public class Teleop extends CommandOpMode {
     @Override
     public void init_loop() { //what happens when looping on init
         if (gamepad1.xWasPressed()) {
-            robot.slides.resetSlides();
         }
     }
 
@@ -63,13 +62,7 @@ public class Teleop extends CommandOpMode {
         if (gamepad1.startWasPressed())
             robot.resetHeading();
 
-        if (gamepad1.backWasPressed())
-            robot.slides.resetSlides();
-
-        if (gamepad1.dpadUpWasPressed())
-            robot.slides.up();
-        if (gamepad1.dpadDownWasPressed())
-            robot.slides.down();
+        robot.slides.setPower(-gamepad1.right_stick_y);
 
         if (gamepad1.rightBumperWasPressed())
             robot.slideArm.toDeposit();
@@ -77,22 +70,19 @@ public class Teleop extends CommandOpMode {
             robot.slideArm.toIntake();
 
         if (gamepad1.xWasPressed())
-            robot.latch.toOpenPos();
-        if (gamepad1.aWasPressed())
-            robot.latch.toClosePos();
+            robot.latch.open();
+        if (gamepad1.bWasPressed())
+            robot.latch.close();
 
 
-        if (gamepad1.left_bumper)
-            speed = 0.5;
-        else
-            speed = 1.0;
 
         if (gamepad1.yWasPressed())
             robot.intake.intakeOn();
         if (gamepad1.aWasPressed())
             robot.intake.intakeOff();
+            telemetry.addData("button pressed:","true");
+            telemetry.update();
 
-        updateTelemetry();
 
     }
 
@@ -107,11 +97,6 @@ public class Teleop extends CommandOpMode {
         multipleTelemetry.addLine();
         multipleTelemetry.addData("Follower Pose", robot.follower.getPose().toString());
         multipleTelemetry.addLine();
-        multipleTelemetry.addData("Right Slide Pos", robot.slides.getRightPosition());
-        multipleTelemetry.addData("Left Slide Pos", robot.slides.getLeftPosition());
-        multipleTelemetry.addData("Slides Target", robot.slides.getTarget());
-        multipleTelemetry.addData("Right Slide Current", robot.slides.getRightCurrent());
-        multipleTelemetry.addData("Left Slide Current", robot.slides.getLeftCurrent());
         multipleTelemetry.addData("Latch Closed", robot.latch.isOpen());
         multipleTelemetry.addData("Hold Position", hold);
         multipleTelemetry.update();

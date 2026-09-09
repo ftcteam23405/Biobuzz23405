@@ -11,20 +11,18 @@ import static com.pedropathing.ivy.groups.Groups.*;
 @Config
 public class SlideArm {
 
-    private Servo leftArmServo;
-    private Servo rightArmServo;
-    public static double depositPos = 0.8;
-    public static double intakePos = 0.2;
+    public Servo leftArmServo;
+    public Servo rightArmServo;
+    private static final double depositPos = 0;
+    private static final double intakePos = 0.62;
 
     public SlideArm(HardwareMap hardwareMap) {
         leftArmServo = hardwareMap.get(Servo.class, "leftArmServo");
         rightArmServo = hardwareMap.get(Servo.class, "rightArmServo");
     }
 
-    public Command rightToPosition(double pos) {
-        return Command.build()
-                .setStart(() -> rightArmServo.setPosition(1 - pos))
-                .requiring(this);
+    public void rightToPosition(double pos) {
+        rightArmServo.setPosition(1 - pos);
     }
 
     public Command leftToPosition(double pos) {
@@ -32,16 +30,17 @@ public class SlideArm {
                 .setStart(() -> leftArmServo.setPosition(pos))
                 .requiring(this);
     }
-    public Command toPosition(double allPos) {
-        return parallel(rightToPosition(allPos), leftToPosition(allPos));
+    public void toPosition(double allPos) {
+        rightToPosition(allPos);
+        leftToPosition(allPos);
     }
 
-    public Command toDeposit() {
-        return toPosition(depositPos);
+    public void toDeposit() {
+        toPosition(depositPos);
     }
 
-    public Command toIntake() {
-        return toPosition(intakePos);
+    public void toIntake() {
+        toPosition(intakePos);
     }
 
 }

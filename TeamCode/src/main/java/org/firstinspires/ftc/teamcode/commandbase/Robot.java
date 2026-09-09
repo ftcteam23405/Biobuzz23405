@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.commandbase.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Latch;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.SlideArm;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Slides;
+import org.firstinspires.ftc.teamcode.commandbase.subsystems.SlidesPowerBased;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class Robot {
     public final Intake intake;
     public final SlideArm slideArm;
     public final Latch latch;
-    public final Slides slides;
+    public final SlidesPowerBased slides;
     public final Follower follower;
     public Alliance alliance;
 
@@ -36,7 +37,7 @@ public class Robot {
         this.alliance = alliance;
         intake = new Intake(hardwareMap);
         latch = new Latch(hardwareMap);
-        slides = new Slides(hardwareMap);
+        slides = new SlidesPowerBased(hardwareMap);
         slideArm = new SlideArm(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
 
@@ -61,7 +62,6 @@ public class Robot {
         }
 
         follower.update();
-        slides.periodic();
     }
 
     public void saveEnd() {
@@ -72,16 +72,13 @@ public class Robot {
         follower.setPose(follower.getPose().withHeading(alliance == Alliance.BLUE ? Math.toRadians(180) : 0));
     }
 
-    public CommandBuilder intake() {
-        return sequential(
-                latch.toOpenPos(),
-                intake.on()
-        );
-    }
+//    public CommandBuilder intake() {
+//        return sequential(
+//                latch.toOpenPos(),
+//                intake.on()
+//        );
+//    }
 
-    public String getMechanismCurrent() {
-        return intake.getCurrent() + "/n" + slides.getRightCurrent() + "/n" + slides.getLeftCurrent();
-    }
 
     public double getLoopTimeMs() {
         return loopTime;

@@ -11,10 +11,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 @Configurable
 @Config
 public class Latch {
-    private Servo latchServo;
-    public static double closePos = 0.52;
-    public static double intakePos = 0.3;
-    public static double openPos = 0.2;
+    public final Servo latchServo;
+    public static double closePos = 0.4;
+    public static double intakePos = 0.4;
+    public static double openPos = 0.29;
 
     public Latch(HardwareMap hardwareMap){
         latchServo = hardwareMap.get(Servo.class, "latchServo");
@@ -35,8 +35,8 @@ public class Latch {
     public CommandBuilder toIntakePos() {
         return Commands.instant(this::intake);
     }
-    public CommandBuilder toOpenPos() { return Commands.instant(this::open); }
-    public CommandBuilder toClosePos() { return Commands.instant(this::close); }
+//    public CommandBuilder toOpenPos() { return Commands.instant(this::open); }
+//    public CommandBuilder toClosePos() { return Commands.instant(this::close); }
 
     public boolean isOpen() {
         return latchServo.getPosition() == openPos;
