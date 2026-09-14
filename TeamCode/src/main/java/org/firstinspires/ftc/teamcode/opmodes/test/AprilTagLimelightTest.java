@@ -1,14 +1,16 @@
 package org.firstinspires.ftc.teamcode.opmodes.test;
 
+import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
+import com.pedropathing.follower.ManualDrive;
+import com.pedropathing.math.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 @TeleOp
 public class AprilTagLimelightTest extends OpMode {
@@ -24,8 +26,7 @@ public class AprilTagLimelightTest extends OpMode {
     public void init() {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(8);
-        follower.setStartingPose(new Pose(0,0,0).withHeading(Math.toRadians(0)));
-        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
+        follower.setPose(new Pose(0,0,0).withHeading(Math.toRadians(0)));
     }
 
     @Override
@@ -34,8 +35,14 @@ public class AprilTagLimelightTest extends OpMode {
     }
 
     public void loop() {
+
+        DrivePowers powers = ManualDrive.fieldCentric(
+                -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, follower.pose().heading()
+        );
+        follower.manual(powers);
+
         follower.update();
-        limelight.updateRobotOrientation(follower.getHeading());
+        limelight.updateRobotOrientation(follower.pose().heading());
         LLResult llResult = limelight.getLatestResult();
         if (llResult != null && llResult.isValid()) {
             Pose3D botPose = llResult.getBotpose_MT2();

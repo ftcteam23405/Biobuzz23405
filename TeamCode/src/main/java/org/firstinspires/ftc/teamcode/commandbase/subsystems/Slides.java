@@ -2,8 +2,7 @@ package org.firstinspires.ftc.teamcode.commandbase.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
-import com.pedropathing.control.PIDFCoefficients;
-import com.pedropathing.control.PIDFController;
+import com.pedropathing.controllers.Controller;
 import com.pedropathing.ivy.CommandBuilder;
 import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,7 +19,7 @@ public class Slides {
     private DcMotorEx rightSlideMotor, leftSlideMotor;
 
     private double target;
-    private PIDFController fastController, slowController; // PIDFController for slides
+    private Controller fastController, slowController, fastFF, slowFF, fastTotalController, slowTotalController; // PIDFController for slides
 
     public static double pidfSwitch = 30; // target tolerance for turret
 
@@ -46,24 +45,31 @@ public class Slides {
 
         target = 0;
 
-        fastController = new PIDFController(new PIDFCoefficients(kP, 0, kD, kF));
-        slowController = new PIDFController(new PIDFCoefficients(sP, 0, sD, sF));
+        fastController = Controller.pid(kP, 0, kD);
+        slowController = Controller.pid(sP, 0, sD);
+
+        fastFF = Controller.staticFeedforward(kF);
+        slowFF = Controller.staticFeedforward(sF);
+
+        fastTotalController = fastController.plus(fastFF);
+        slowTotalController = slowController.plus(slowFF);
+
     }
 
     public void periodic() {
-        fastController.setCoefficients(new PIDFCoefficients(kP, 0, kD, kF));
-        slowController.setCoefficients(new PIDFCoefficients(sP, 0, sD, sF));
-        error = getTarget() - getRightPosition();
-        if (Math.abs(error) > pidfSwitch) {
-            fastController.updateError(error);
-            fastController.updateFeedForwardInput(Math.signum(error));
-            power = fastController.run();
-        } else {
-            slowController.updateError(error);
-            power = slowController.run();
-        }
-        rightSlideMotor.setPower(power);
-        leftSlideMotor.setPower(power);
+//        fastController.(new PIDFCoefficients(kP, 0, kD, kF));
+//        slowController.setCoefficients(new PIDFCoefficients(sP, 0, sD, sF));
+//        error = getTarget() - getRightPosition();
+//        if (Math.abs(error) > pidfSwitch) {
+//            fastController.updateError(error);
+//            fastController.updateFeedForwardInput(Math.signum(error));
+//            power = fastController.run();
+//        } else {
+//            slowController.updateError(error);
+//            power = slowController.run();
+//        }
+//        rightSlideMotor.setPower(power);
+//        leftSlideMotor.setPower(power);
     }
 
 

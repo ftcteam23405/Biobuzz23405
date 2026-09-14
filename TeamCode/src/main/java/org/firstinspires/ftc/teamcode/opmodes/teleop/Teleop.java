@@ -2,22 +2,24 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import static org.firstinspires.ftc.teamcode.commandbase.Robot.*;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.JoinedTelemetry;
 import com.bylazar.telemetry.PanelsTelemetry;
+import com.pedropathing.drivetrain.DrivePowers;
+import com.pedropathing.follower.ManualDrive;
+import com.pedropathing.ivy.Scheduler;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.commandbase.Alliance;
-import org.firstinspires.ftc.teamcode.commandbase.CommandOpMode;
 import org.firstinspires.ftc.teamcode.commandbase.Robot;
 
 @Config
 @Configurable
 //one single Teleop Class that handles all Teleop Commands, then added alliance through constructor
-public class Teleop extends CommandOpMode {
+public class Teleop extends OpMode {
 
-    MultipleTelemetry multipleTelemetry;
+    JoinedTelemetry joinedTelemetry;
 
     Robot robot;
     final Alliance alliance;
@@ -32,9 +34,9 @@ public class Teleop extends CommandOpMode {
     @Override
     public void init() { //what happens at initialization
         robot = new Robot(hardwareMap, alliance);
-        robot.follower.setStartingPose(defaultPose);
+        robot.follower.setPose(endPose);
 
-        multipleTelemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(), PanelsTelemetry.INSTANCE.getFtcTelemetry(), telemetry);
+        joinedTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(), telemetry);
     }
 
     @Override
@@ -42,22 +44,26 @@ public class Teleop extends CommandOpMode {
         if (gamepad1.xWasPressed()) {
             robot.slides.resetSlides();
         }
+        joinedTelemetry.addData("Robot Saved Pose", endPose); //way to check saved pose after auto
+        joinedTelemetry.update();
     }
 
     @Override
     public void start() { //what happens when start is pressed
         robot.periodic();
-        robot.follower.startTeleOpDrive(true);
     }
 
     @Override
     public void loop() { //what happens during the whole match - what runs in the background
         robot.periodic();
-        super.loop();
+        Scheduler.execute();
         //if the robot is not holding position, run the Teleop Drive
         //if the alliance is Blue, then set the offset heading to PI rad. If not, then keep it 0 (for red)
         if (!hold) {
-            robot.follower.setTeleOpDrive(speed * -gamepad1.left_stick_y, speed * -gamepad1.left_stick_x, speed * -gamepad1.right_stick_x, false, robot.alliance == Alliance.BLUE ? Math.toRadians(180) : 0);
+            DrivePowers powers = ManualDrive.fieldCentric(
+                    -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, robot.follower.pose().heading()
+            );
+            robot.follower.manual(powers);
         }
 
         if (gamepad1.startWasPressed())
@@ -99,21 +105,21 @@ public class Teleop extends CommandOpMode {
     @Override
     public void stop() { //what happens when stop button is clicked
         robot.saveEnd();
-        super.stop();
+        Scheduler.reset();
     }
 
     public void updateTelemetry() {
-        multipleTelemetry.addData("LoopTime Hz", robot.getLoopTimeHz());
-        multipleTelemetry.addLine();
-        multipleTelemetry.addData("Follower Pose", robot.follower.getPose().toString());
-        multipleTelemetry.addLine();
-        multipleTelemetry.addData("Right Slide Pos", robot.slides.getRightPosition());
-        multipleTelemetry.addData("Left Slide Pos", robot.slides.getLeftPosition());
-        multipleTelemetry.addData("Slides Target", robot.slides.getTarget());
-        multipleTelemetry.addData("Right Slide Current", robot.slides.getRightCurrent());
-        multipleTelemetry.addData("Left Slide Current", robot.slides.getLeftCurrent());
-        multipleTelemetry.addData("Latch Closed", robot.latch.isOpen());
-        multipleTelemetry.addData("Hold Position", hold);
-        multipleTelemetry.update();
+        joinedTelemetry.addData("LoopTime Hz", robot.getLoopTimeHz());
+        joinedTelemetry.addLine();
+        joinedTelemetry.addData("Follower Pose", robot.follower.pose().toString());
+        joinedTelemetry.addLine();
+        joinedTelemetry.addData("Right Slide Pos", robot.slides.getRightPosition());
+        joinedTelemetry.addData("Left Slide Pos", robot.slides.getLeftPosition());
+        joinedTelemetry.addData("Slides Target", robot.slides.getTarget());
+        joinedTelemetry.addData("Right Slide Current", robot.slides.getRightCurrent());
+        joinedTelemetry.addData("Left Slide Current", robot.slides.getLeftCurrent());
+        joinedTelemetry.addData("Latch Closed", robot.latch.isOpen());
+        joinedTelemetry.addData("Hold Position", hold);
+        joinedTelemetry.update();
     }
 }

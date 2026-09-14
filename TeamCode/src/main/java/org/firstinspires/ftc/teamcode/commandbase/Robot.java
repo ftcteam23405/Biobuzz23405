@@ -3,9 +3,8 @@ package org.firstinspires.ftc.teamcode.commandbase;
 import static com.pedropathing.ivy.groups.Groups.*;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.CommandBuilder;
-import com.pedropathing.util.Timer;
+import com.pedropathing.math.Pose;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -13,9 +12,10 @@ import org.firstinspires.ftc.teamcode.commandbase.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Latch;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.SlideArm;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Slides;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 //class where all robot mechanisms and routines are handled
 // Structure: Subsystems & Commands -> Robot Class -> Teleop
@@ -28,8 +28,8 @@ public class Robot {
     public Alliance alliance;
 
     private final List<LynxModule> hubs;
-    private final com.pedropathing.util.Timer loop = new Timer();
-    public static Pose defaultPose = new Pose(8 + 24, 6.25 + 24, 0);
+    private final com.pedropathing.utils.Timer loopTimer = new com.pedropathing.utils.Timer();
+    public static Pose endPose = new Pose(0, 0, 0);
     public double loops = 0, lastLoop = 0, loopTime = 0;
 
     public Robot(HardwareMap hardwareMap, Alliance alliance) {
@@ -38,14 +38,14 @@ public class Robot {
         latch = new Latch(hardwareMap);
         slides = new Slides(hardwareMap);
         slideArm = new SlideArm(hardwareMap);
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.create(hardwareMap);
 
         hubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : hubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        loop.resetTimer();
+        loopTimer.reset();
 
         periodic();
     }
@@ -54,7 +54,7 @@ public class Robot {
         loops++;
 
         if (loops > 10) { //for ref, 50hz is a solid loop time
-            double now = loop.getElapsedTime();
+            double now = loopTimer.get(TimeUnit.MILLISECONDS);
             loopTime = (now - lastLoop) / loops;
             lastLoop = now;
             loops = 0;
@@ -64,12 +64,12 @@ public class Robot {
         slides.periodic();
     }
 
-    public void saveEnd() {
-        defaultPose = follower.getPose();
+    public void saveEnd() { //use at end of all autos
+        endPose = follower.pose();
     }
 
     public void resetHeading() {
-        follower.setPose(follower.getPose().withHeading(alliance == Alliance.BLUE ? Math.toRadians(180) : 0));
+        follower.setPose(follower.pose().withHeading(alliance == Alliance.BLUE ? Math.toRadians(180) : 0));
     }
 
     public CommandBuilder intake() {

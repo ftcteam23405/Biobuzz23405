@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.outreach;
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -13,6 +14,7 @@ import static org.firstinspires.ftc.teamcode.tuning.Globals.*;
 @Autonomous
 @Configurable
 @Config
+@Disabled
 public class India_Editable_Auto_Short extends LinearOpMode  {
 
     public static double DRIVETRAIN_POWER = 0.3;
