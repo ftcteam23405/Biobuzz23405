@@ -2,12 +2,14 @@ package org.firstinspires.ftc.teamcode.commandbase.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
-import com.pedropathing.math.Vector;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configurable
@@ -15,13 +17,25 @@ import java.util.List;
 public class Limelight {
     private Limelight3A limelight;
     private Alliance alliance;
-    private static final int shoot = 0, zone = 1;
-    private int pipeline = shoot;
+    private static final int redTags = 0, blueTags = 1, blob = 2;
+    private int tagsPipeline;
+
+    private int currentPipeline;
+
+    public static double distanceOffset = 8; // inches added to the camera-to-tag distance (camera to shooter)
+    public static long maxStalenessMs = 150; // ignore results older than this
 
     public Limelight(HardwareMap hardwareMap, Alliance a) {
         alliance = a;
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        switchToShoot();
+        if (alliance == Alliance.RED) {
+            tagsPipeline = redTags;
+        } else {
+            tagsPipeline = blueTags;
+        }
+        limelight.setPollRateHz(20);
+        setPipleline(tagsPipeline);
+        limelight.start();
     }
 
     public void start() {
@@ -36,80 +50,79 @@ public class Limelight {
         limelight.pause();
     }
 
-    public double distanceFromTag(double tagID) {
-        switchToShoot();
-        List<LLResultTypes.FiducialResult> r = limelight.getLatestResult().getFiducialResults();
+    public void setPipleline(int pipleline) {
+        limelight.pipelineSwitch(pipleline);
+        currentPipeline = pipleline;
+    }
 
-        if (r.isEmpty()) return 0;
+    public int getPipleline() {
+        return currentPipeline;
+    }
 
-        LLResultTypes.FiducialResult target = null;
-        for (LLResultTypes.FiducialResult i: r) {
-            if (i != null && i.getFiducialId() ==  tagID) {
-                target = i;
-                break;
-            }
+
+    //finds distance to closest tag
+    public double distanceFromTag() {
+        LLResult result = tagResult();
+
+        if (result == null) return 0;
+
+        double closest = Double.MAX_VALUE;
+
+        // closest visible tag; the pipeline only detects our alliance's tags
+        for (LLResultTypes.FiducialResult i: result.getFiducialResults()) {
+            if (i != null)
+                closest = Math.min(closest, distanceTo(i));
         }
 
-        if (target != null) {
-            double x = (target.getCameraPoseTargetSpace().getPosition().x / DistanceUnit.mPerInch) + 8; // right/left from tag
-            double z = (target.getCameraPoseTargetSpace().getPosition().z / DistanceUnit.mPerInch) + 8; // forward/back from tag
+        return closest == Double.MAX_VALUE ? 0 : closest;
+    }
 
-            Vector e = new Vector();
-            e.setOrthogonalComponents(x, z);
-            return e.getMagnitude();
+    // horizontal distance from camera to tag, in inches
+    private double distanceTo(LLResultTypes.FiducialResult tag) {
+        Position p = tag.getCameraPoseTargetSpace().getPosition().toUnit(DistanceUnit.INCH);
+
+        // x is right/left of the tag and z is out from the tag, so this ignores height
+        return Math.hypot(p.x, p.z) + distanceOffset;
+    }
+
+    public double angle() {
+        LLResult result = tagResult();
+
+        if (result == null) return 0;
+
+        return result.getTx(); // horizontal offset from crosshair to primary detection, in degrees
+    }
+
+    // latest result from the tags pipeline, or null if there's no fresh detection
+    private LLResult tagResult() {
+        switchToShootPipeline();
+        LLResult result = limelight.getLatestResult();
+
+        if (result == null || !result.isValid()) return null;
+        if (result.getStaleness() > maxStalenessMs) return null;
+        if (result.getPipelineIndex() != currentPipeline) return null; // still switching pipelines
+
+        return result;
+    }
+
+    public void switchToShootPipeline() {
+        if (currentPipeline != tagsPipeline)
+            setPipleline(tagsPipeline);
+        if (!limelight.isRunning())
+            limelight.start();
+    }
+
+    public List<Integer> visibleTagIds() {
+        List<Integer> ids = new ArrayList<>();
+        LLResult result = tagResult();
+
+        if (result == null) return ids;
+
+        for (LLResultTypes.FiducialResult i: result.getFiducialResults()) {
+            if (i != null)
+                ids.add(i.getFiducialId());
         }
-
-        return 0;
+        return ids;
     }
 
-    public double distanceFromBlue() {
-        return distanceFromTag(20);
-    }
-
-    public double distanceFromRed() {
-        return distanceFromTag(24);
-    }
-
-    public double angleFromTag(double tagID) {
-        switchToShoot();
-        List<LLResultTypes.FiducialResult> r = limelight.getLatestResult().getFiducialResults();
-
-        if (r.isEmpty()) return 0;
-
-        LLResultTypes.FiducialResult target = null;
-        for (LLResultTypes.FiducialResult i: r) {
-            if (i != null && i.getFiducialId() ==  tagID) {
-                target = i;
-                break;
-            }
-        }
-
-        if (target != null)
-            return target.getTargetXDegrees();
-
-        return 0;
-    }
-
-    public double angleFromBlue() {
-        return angleFromTag(20);
-    }
-
-    public double angleFromRed() {
-        return angleFromTag(24);
-    }
-
-    public double angleFromShoot() {
-        return alliance == Alliance.BLUE ? angleFromBlue() : angleFromRed();
-    }
-
-    public double distanceFromShoot() {
-        return alliance == Alliance.BLUE ? distanceFromBlue() : distanceFromRed();
-    }
-
-    public void switchToShoot() {
-        if (pipeline != shoot)
-            limelight.pipelineSwitch(shoot);
-        limelight.setPollRateHz(20);
-        limelight.start();
-    }
 }
