@@ -9,8 +9,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.vision.PollenDetector;
+
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configurable
 @Config
@@ -21,6 +25,12 @@ public class Limelight {
     private int tagsPipeline;
 
     private int currentPipeline;
+    private PollenDetector pollenDetector;
+
+    // blob results, refreshed in periodic()
+    private List<PollenDetector.Ball> balls = new ArrayList<>();
+    private int pollenCount = 0;
+    private PollenDetector.Ball bestPollen = null;
 
     public static double distanceOffset = 8; // inches added to the camera-to-tag distance (camera to shooter)
     public static long maxStalenessMs = 150; // ignore results older than this
@@ -28,6 +38,7 @@ public class Limelight {
     public Limelight(HardwareMap hardwareMap, Alliance a) {
         alliance = a;
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        pollenDetector = new PollenDetector(hardwareMap, "limelight");
         if (alliance == Alliance.RED) {
             tagsPipeline = redTags;
         } else {
@@ -58,23 +69,23 @@ public class Limelight {
     public int getPipleline() {
         return currentPipeline;
     }
-
-
-    //finds distance to closest tag
-    public double distanceFromTag() {
+    
+    // straight-line distance to the closest goal in inches, or NaN if no tag is visible
+    // the pipeline only detects our alliance's tags, so the closest tag is on the closest goal
+    public double distanceToGoal() {
         LLResult result = tagResult();
 
-        if (result == null) return 0;
+        if (result == null) return Double.NaN;
 
-        double closest = Double.MAX_VALUE;
-
-        // closest visible tag; the pipeline only detects our alliance's tags
+        double closest = Double.NaN;
         for (LLResultTypes.FiducialResult i: result.getFiducialResults()) {
-            if (i != null)
-                closest = Math.min(closest, distanceTo(i));
+            if (i == null) continue;
+            double d = distanceTo(i);
+            if (Double.isNaN(closest) || d < closest)
+                closest = d;
         }
 
-        return closest == Double.MAX_VALUE ? 0 : closest;
+        return closest;
     }
 
     // horizontal distance from camera to tag, in inches
@@ -90,7 +101,7 @@ public class Limelight {
 
         if (result == null) return 0;
 
-        return result.getTx(); // horizontal offset from crosshair to primary detection, in degrees
+        return result.getTx(); // horizontal offset from crosshair to primary detection, deg
     }
 
     // latest result from the tags pipeline, or null if there's no fresh detection
@@ -112,6 +123,13 @@ public class Limelight {
             limelight.start();
     }
 
+    public void switchToBlobPipeline() {
+        if (currentPipeline != blob)
+            setPipleline(blob);
+        if (!limelight.isRunning())
+            limelight.start();
+    }
+
     public List<Integer> visibleTagIds() {
         List<Integer> ids = new ArrayList<>();
         LLResult result = tagResult();
@@ -123,6 +141,69 @@ public class Limelight {
                 ids.add(i.getFiducialId());
         }
         return ids;
+    }
+
+    // distance to every visible tag, keyed by tag id
+    public Map<Integer, Double> tagDistances() {
+        Map<Integer, Double> distances = new LinkedHashMap<>();
+        LLResult result = tagResult();
+
+        if (result == null) return distances;
+
+        for (LLResultTypes.FiducialResult i: result.getFiducialResults()) {
+            if (i != null)
+                distances.put(i.getFiducialId(), distanceTo(i));
+        }
+        return distances;
+    }
+
+    // call once per loop; only does work while on the blob pipeline
+    public void periodic() {
+        if (currentPipeline != blob) {
+            clearBlobs();
+            return;
+        }
+
+        LLResult result = limelight.getLatestResult();
+
+        // still switching pipelines, so the python output is from the old pipeline
+        if (result == null || currentPipeline != blob) {
+            clearBlobs();
+            return;
+        }
+
+        balls = pollenDetector.update();
+        pollenCount = pollenDetector.getPollenCount();
+        bestPollen = pollenDetector.getBestPollen();
+    }
+
+    private void clearBlobs() {
+        balls = new ArrayList<>();
+        pollenCount = 0;
+        bestPollen = null;
+    }
+
+    // pollen visible, median over the last few frames (use this for decisions)
+    public int getPollenCount() {
+        return pollenCount;
+    }
+
+    // closest pollen (largest radius), or null if none
+    public PollenDetector.Ball getBestPollen() {
+        return bestPollen;
+    }
+
+    public boolean hasPollen() {
+        return bestPollen != null;
+    }
+
+    // every ball from the latest frame, pollen and other
+    public List<PollenDetector.Ball> getBalls() {
+        return balls;
+    }
+
+    public boolean hasFreshBlobData() {
+        return currentPipeline == blob && pollenDetector.hasFreshData();
     }
 
 }

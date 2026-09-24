@@ -41,9 +41,7 @@ public class Teleop extends OpMode {
 
     @Override
     public void init_loop() { //what happens when looping on init
-        if (gamepad1.xWasPressed()) {
-            robot.slides.resetSlides();
-        }
+
         joinedTelemetry.addData("Robot Saved Pose", endPose); //way to check saved pose after auto
         joinedTelemetry.update();
     }
@@ -69,18 +67,7 @@ public class Teleop extends OpMode {
         if (gamepad1.startWasPressed())
             robot.resetHeading();
 
-        if (gamepad1.backWasPressed())
-            robot.slides.resetSlides();
 
-        if (gamepad1.dpadUpWasPressed())
-            robot.slides.up();
-        if (gamepad1.dpadDownWasPressed())
-            robot.slides.down();
-
-        if (gamepad1.rightBumperWasPressed())
-            robot.slideArm.toDeposit();
-        if (gamepad1.leftBumperWasPressed())
-            robot.slideArm.toIntake();
 
         if (gamepad1.xWasPressed())
             robot.latch.toOpenPos();
@@ -113,11 +100,7 @@ public class Teleop extends OpMode {
         joinedTelemetry.addLine();
         joinedTelemetry.addData("Follower Pose", robot.follower.pose().toString());
         joinedTelemetry.addLine();
-        joinedTelemetry.addData("Right Slide Pos", robot.slides.getRightPosition());
-        joinedTelemetry.addData("Left Slide Pos", robot.slides.getLeftPosition());
-        joinedTelemetry.addData("Slides Target", robot.slides.getTarget());
-        joinedTelemetry.addData("Right Slide Current", robot.slides.getRightCurrent());
-        joinedTelemetry.addData("Left Slide Current", robot.slides.getLeftCurrent());
+
         joinedTelemetry.addData("Latch Closed", robot.latch.isOpen());
         joinedTelemetry.addData("Hold Position", hold);
         joinedTelemetry.update();
