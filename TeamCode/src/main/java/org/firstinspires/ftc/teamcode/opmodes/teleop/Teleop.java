@@ -34,7 +34,7 @@ public class Teleop extends OpMode {
     @Override
     public void init() { //what happens at initialization
         robot = new Robot(hardwareMap, alliance);
-        robot.follower.setPose(endPose);
+        robot.follower.setPose(robot.getEnd());
 
         joinedTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(), telemetry);
     }
@@ -42,7 +42,7 @@ public class Teleop extends OpMode {
     @Override
     public void init_loop() { //what happens when looping on init
 
-        joinedTelemetry.addData("Robot Saved Pose", endPose); //way to check saved pose after auto
+        joinedTelemetry.addData("Robot Saved Pose", robot.getEnd()); //way to check saved pose after auto
         joinedTelemetry.update();
     }
 
@@ -59,7 +59,7 @@ public class Teleop extends OpMode {
         //if the alliance is Blue, then set the offset heading to PI rad. If not, then keep it 0 (for red)
         if (!hold) {
             DrivePowers powers = ManualDrive.fieldCentric(
-                    -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, robot.follower.pose().heading()
+                    -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, robot.follower.pose().heading(), (robot.alliance == Alliance.BLUE ? Math.toRadians(0) : Math.toRadians(180))
             );
             robot.follower.manual(powers);
         }
@@ -91,7 +91,7 @@ public class Teleop extends OpMode {
 
     @Override
     public void stop() { //what happens when stop button is clicked
-        robot.saveEnd();
+        robot.setEnd();
         Scheduler.reset();
     }
 

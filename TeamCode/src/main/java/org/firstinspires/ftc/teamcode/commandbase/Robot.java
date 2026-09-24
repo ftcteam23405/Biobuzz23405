@@ -29,7 +29,7 @@ public class Robot {
 
     private final List<LynxModule> hubs;
     private final com.pedropathing.utils.Timer loopTimer = new com.pedropathing.utils.Timer();
-    public static Pose endPose = new Pose(0, 0, 0);
+    private static Pose endPose = new Pose(0, 0, 0);
     public double loops = 0, lastLoop = 0, loopTime = 0;
 
     public Robot(HardwareMap hardwareMap, Alliance alliance) {
@@ -69,8 +69,11 @@ public class Robot {
         shooter.periodic();
     }
 
-    public void saveEnd() { //use at end of all autos
+    public void setEnd() { //use at end of all autos
         endPose = follower.pose();
+    }
+    public Pose getEnd() {
+        return endPose;
     }
 
     public void resetHeading() {

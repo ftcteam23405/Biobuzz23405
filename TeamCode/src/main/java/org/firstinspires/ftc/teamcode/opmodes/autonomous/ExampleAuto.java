@@ -70,6 +70,6 @@ public class ExampleAuto extends OpMode {
 
     @Override
     public void stop() {
-        robot.saveEnd();
+        robot.setEnd();
     }
 }
