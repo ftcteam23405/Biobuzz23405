@@ -1,65 +1,146 @@
 package org.firstinspires.ftc.teamcode.opmodes.test;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
+import org.firstinspires.ftc.teamcode.commandbase.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
+import java.util.List;
+import java.util.Map;
+
+// apriltag + shooter tester, makes the follower, limelight, and shooter itself instead of using the Robot class
+// during init: dpad left = blue, dpad right = red
+// a = spin up (tracks distance to goal), x = spin up to fixedVelocity, b = spin down, y = reset distance filter
+// set startX / startY / startHeadingDeg to where the robot actually starts, or the odometry distance is wrong
+// tune Limelight.distanceOffset / maxStalenessMs and Shooter weights from the dashboard
+@Configurable
 @TeleOp
 public class AprilTagLimelightTest extends OpMode {
-
+    public static double startX = 72, startY = 24, startHeadingDeg = 90;
+    public static double fixedVelocity = 1300;
 
     private Follower follower;
-    private Limelight3A limelight;
+    private Limelight limelight;
+    private Shooter shooter;
+    private Alliance alliance = Alliance.BLUE;
 
-    private double distance;
-
+    private final ElapsedTime loopTimer = new ElapsedTime();
 
     @Override
     public void init() {
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(8);
-        follower.setPose(new Pose(0,0,0).withHeading(Math.toRadians(0)));
+        for (LynxModule hub : hardwareMap.getAll(LynxModule.class)) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+    }
+
+    @Override
+    public void init_loop() {
+        if (gamepad1.dpadLeftWasPressed()) alliance = Alliance.BLUE;
+        if (gamepad1.dpadRightWasPressed()) alliance = Alliance.RED;
+
+        telemetry.addData("Alliance", alliance + " (dpad left/right to change)");
+        telemetry.addData("Start pose", "(%.1f, %.1f) %.0f deg", startX, startY, startHeadingDeg);
+        telemetry.update();
     }
 
     @Override
     public void start() {
-        limelight.start();
+        // made here instead of init() so the alliance picked during init sets the tag pipeline
+        follower = Constants.create(hardwareMap);
+        follower.setPose(new Pose(startX, startY, Math.toRadians(startHeadingDeg)));
+        limelight = new Limelight(hardwareMap, alliance);
+        shooter = new Shooter(hardwareMap);
+        loopTimer.reset();
     }
 
+    @Override
     public void loop() {
+        follower.update();
+        Pose pose = follower.pose();
 
         DrivePowers powers = ManualDrive.fieldCentric(
-                -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, follower.pose().heading()
+                -gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, pose.heading()
         );
         follower.manual(powers);
 
-        follower.update();
-        limelight.updateRobotOrientation(follower.pose().heading());
-        LLResult llResult = limelight.getLatestResult();
-        if (llResult != null && llResult.isValid()) {
-            Pose3D botPose = llResult.getBotpose_MT2();
-            distance = getDistanceFromTag(llResult.getTa());
-            telemetry.addData("Distance", distance);
-            telemetry.addData("Tx", llResult.getTx());
-            telemetry.addData("Ty", llResult.getTy());
-            telemetry.addData("Ta", llResult.getTa());
-            telemetry.addData("BotPose", botPose.toString());
-            telemetry.addData("Yaw", botPose.getOrientation().getYaw());
-            telemetry.update();
+        if (gamepad1.aWasPressed()) shooter.startTracking();
+        if (gamepad1.xWasPressed()) shooter.setTargetVelocity(fixedVelocity);
+        if (gamepad1.bWasPressed()) shooter.stop();
+        if (gamepad1.yWasPressed()) shooter.resetFilter();
+
+        // only read tags while tracking, distanceToGoal() switches the limelight to the tags pipeline
+        if (shooter.isTracking())
+            shooter.setVelocityFromDistance(pose, alliance, limelight.distanceToGoal());
+        shooter.periodic();
+
+        double loopMs = loopTimer.milliseconds();
+        loopTimer.reset();
+
+        telemetry.addData("Alliance", alliance);
+        telemetry.addData("Pose", "(%.1f, %.1f) %.1f deg", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
+        telemetry.addData("Loop time", "%.1f Hz", 1000 / loopMs);
+        telemetry.addLine();
+
+        addShooterTelemetry(pose);
+        telemetry.addLine();
+        addTagTelemetry();
+
+        telemetry.update();
+    }
+
+    private void addShooterTelemetry(Pose pose) {
+        telemetry.addLine("--- Shooter ---");
+        telemetry.addData("Mode", shooter.isTracking() ? "tracking distance" : "fixed velocity");
+        telemetry.addData("Target velocity", "%.0f", shooter.getTargetVelocity());
+        telemetry.addData("Actual velocity", "%.0f", shooter.getVelocity());
+        telemetry.addData("At target", shooter.atTarget());
+
+        Pose goal = Shooter.closestGoal(pose, alliance);
+        telemetry.addData("Closest goal", "(%.1f, %.1f)", goal.x(), goal.y());
+
+        // odometry / limelight / filtered side by side, to tune limelightWeight and distanceOffset
+        // (odometry and limelight should read about the same when the start pose is right)
+        // only updates while tracking
+        telemetry.addData("Odometry distance", "%.1f in", shooter.getOdometryDistance());
+        double tag = shooter.getLimelightDistance();
+        telemetry.addData("Limelight distance", Double.isNaN(tag) ? "no tag" : String.format("%.1f in", tag));
+        telemetry.addData("Filtered distance", "%.1f in", shooter.getGoalDistance());
+        telemetry.addData("Table velocity", "%.0f", Shooter.velocityFor(shooter.getGoalDistance()));
+    }
+
+    private void addTagTelemetry() {
+        telemetry.addLine("--- Limelight ---");
+        telemetry.addData("Pipeline", limelight.getPipleline());
+
+        List<Integer> ids = limelight.visibleTagIds();
+        if (ids.isEmpty()) {
+            telemetry.addLine("No fresh tag detection");
+            return;
+        }
+
+        telemetry.addData("Visible tags", ids);
+        telemetry.addData("Distance to goal (in)", "%.1f", limelight.distanceToGoal());
+        telemetry.addData("Angle / Tx (deg)", "%.2f", limelight.angle());
+
+        for (Map.Entry<Integer, Double> tag : limelight.tagDistances().entrySet()) {
+            telemetry.addData("Tag " + tag.getKey(), "%.1f in", tag.getValue());
         }
     }
 
-    public double getDistanceFromTag(double ta) {
-        double scale = 0; //change this with testing
-        double distance = (scale / ta);
-        return distance;
+    @Override
+    public void stop() {
+        // null if stopped during init
+        if (shooter != null) shooter.stop();
+        if (limelight != null) limelight.stop();
     }
 }

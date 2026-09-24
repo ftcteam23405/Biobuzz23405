@@ -11,8 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Latch;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
-import org.firstinspires.ftc.teamcode.commandbase.subsystems.SlideArm;
-import org.firstinspires.ftc.teamcode.commandbase.subsystems.Slides;
+import org.firstinspires.ftc.teamcode.commandbase.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 import java.util.List;
@@ -22,9 +21,9 @@ import java.util.concurrent.TimeUnit;
 // Structure: Subsystems & Commands -> Robot Class -> Teleop
 public class Robot {
     public final Intake intake;
-    public final SlideArm slideArm;
     public final Latch latch;
-    public final Slides slides;
+    public final Shooter shooter;
+    public final Limelight limelight;
     public final Follower follower;
     public Alliance alliance;
 
@@ -37,8 +36,8 @@ public class Robot {
         this.alliance = alliance;
         intake = new Intake(hardwareMap);
         latch = new Latch(hardwareMap);
-        slides = new Slides(hardwareMap);
-        slideArm = new SlideArm(hardwareMap);
+        shooter = new Shooter(hardwareMap);
+        limelight = new Limelight(hardwareMap, alliance);
         follower = Constants.create(hardwareMap);
 
         hubs = hardwareMap.getAll(LynxModule.class);
@@ -62,7 +61,12 @@ public class Robot {
         }
 
         follower.update();
-        slides.periodic();
+        limelight.periodic();
+
+        // only read tags while tracking, distanceToGoal() switches the limelight to the tags pipeline
+        if (shooter.isTracking())
+            shooter.setVelocityFromDistance(follower.pose(), alliance, limelight.distanceToGoal());
+        shooter.periodic();
     }
 
     public void saveEnd() { //use at end of all autos
@@ -80,9 +84,6 @@ public class Robot {
         );
     }
 
-    public String getMechanismCurrent() {
-        return intake.getCurrent() + "/n" + slides.getRightCurrent() + "/n" + slides.getLeftCurrent();
-    }
 
     public double getLoopTimeMs() {
         return loopTime;
