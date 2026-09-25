@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.util.Alliance;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
@@ -22,7 +22,7 @@ import java.util.Map;
 // during init: dpad left = blue, dpad right = red
 // a = spin up (tracks distance to goal), x = spin up to fixedVelocity, b = spin down, y = reset distance filter
 // set startX / startY / startHeadingDeg to where the robot actually starts, or the odometry distance is wrong
-// tune Limelight.distanceOffset / maxStalenessMs and Shooter weights from the dashboard
+// tune Limelight.distanceOffset / maxStalenessMs from the dashboard, and the filter with GoalDistanceFilterTuner
 @Configurable
 @TeleOp
 public class AprilTagLimelightTest extends OpMode {
@@ -59,6 +59,7 @@ public class AprilTagLimelightTest extends OpMode {
         follower = Constants.create(hardwareMap);
         follower.setPose(new Pose(startX, startY, Math.toRadians(startHeadingDeg)));
         limelight = new Limelight(hardwareMap, alliance);
+        limelight.switchToShootPipeline();
         shooter = new Shooter(hardwareMap);
         loopTimer.reset();
     }
@@ -78,9 +79,12 @@ public class AprilTagLimelightTest extends OpMode {
         if (gamepad1.bWasPressed()) shooter.stop();
         if (gamepad1.yWasPressed()) shooter.resetFilter();
 
-        // only read tags while tracking, distanceToGoal() switches the limelight to the tags pipeline
+        // one read of the limelight per loop, everything below just uses what it cached
+        limelight.periodic();
+
+        // NaN unless a new tag frame came in this loop, so the filter corrects once per frame
         if (shooter.isTracking())
-            shooter.setVelocityFromDistance(pose, alliance, limelight.distanceToGoal());
+            shooter.setVelocityFromDistance(pose, alliance, limelight.freshDistanceToGoal());
         shooter.periodic();
 
         double loopMs = loopTimer.milliseconds();
@@ -108,13 +112,16 @@ public class AprilTagLimelightTest extends OpMode {
         Pose goal = Shooter.closestGoal(pose, alliance);
         telemetry.addData("Closest goal", "(%.1f, %.1f)", goal.x(), goal.y());
 
-        // odometry / limelight / filtered side by side, to tune limelightWeight and distanceOffset
+        // odometry / limelight / filtered side by side, to check distanceOffset and the filter
         // (odometry and limelight should read about the same when the start pose is right)
         // only updates while tracking
         telemetry.addData("Odometry distance", "%.1f in", shooter.getOdometryDistance());
         double tag = shooter.getLimelightDistance();
         telemetry.addData("Limelight distance", Double.isNaN(tag) ? "no tag" : String.format("%.1f in", tag));
         telemetry.addData("Filtered distance", "%.1f in", shooter.getGoalDistance());
+        telemetry.addData("Filter dx (pedro)", "%.2f in", shooter.getFilterDx());
+        telemetry.addData("Filter rejects", shooter.getFilterRejects());
+        telemetry.addData("Filter corrections", shooter.getFilterCorrections());
         telemetry.addData("Table velocity", "%.0f", Shooter.velocityFor(shooter.getGoalDistance()));
     }
 
@@ -129,11 +136,15 @@ public class AprilTagLimelightTest extends OpMode {
         }
 
         telemetry.addData("Visible tags", ids);
+        telemetry.addData("New frame this loop", limelight.hasNewTagFrame());
+        telemetry.addData("Tag frames", limelight.getTagFrames());
         telemetry.addData("Distance to goal (in)", "%.1f", limelight.distanceToGoal());
-        telemetry.addData("Angle / Tx (deg)", "%.2f", limelight.angle());
+        telemetry.addData("Angle to goal center (deg)", "%.2f", limelight.angle());
 
+        // all the tags on one cell should read the same distance, if they don't fix that tag's offset
         for (Map.Entry<Integer, Double> tag : limelight.tagDistances().entrySet()) {
-            telemetry.addData("Tag " + tag.getKey(), "%.1f in", tag.getValue());
+            telemetry.addData("Tag " + tag.getKey() + " -> goal center",
+                    "%.1f in (offset %.1f)", tag.getValue(), Limelight.goalOffset(tag.getKey()));
         }
     }
 

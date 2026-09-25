@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
-import static org.firstinspires.ftc.teamcode.commandbase.Robot.*;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.JoinedTelemetry;
@@ -11,7 +9,7 @@ import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.ivy.Scheduler;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.util.Alliance;
 import org.firstinspires.ftc.teamcode.commandbase.Robot;
 
 @Config
@@ -34,7 +32,7 @@ public class Teleop extends OpMode {
     @Override
     public void init() { //what happens at initialization
         robot = new Robot(hardwareMap, alliance);
-        robot.follower.setPose(robot.getEnd());
+        robot.setPose(robot.getEnd()); //also resets the shooter's distance filter
 
         joinedTelemetry = new JoinedTelemetry(PanelsTelemetry.INSTANCE.getFtcTelemetry(), telemetry);
     }

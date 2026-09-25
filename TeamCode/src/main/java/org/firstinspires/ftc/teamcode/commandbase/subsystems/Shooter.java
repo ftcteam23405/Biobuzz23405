@@ -11,7 +11,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.util.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.util.GoalDistanceFilter;
 
 import smile.interpolation.Interpolation;
 import smile.interpolation.LinearInterpolation;
@@ -27,14 +28,12 @@ public class Shooter {
     public static double tolerance = 50; // ticks/s
 
 
-    public static double redGoalX = 62;
-    public static double blueGoalX = 82;
-    public static double audienceGoalY = 62.6;
-    public static double farGoalY = 81.4;
+    public static double redGoalX = 58;
+    public static double blueGoalX = 84;
+    public static double audienceGoalY = 52;
+    public static double farGoalY = 90;
 
-    public static double limelightWeight = 0.7; // 0 = odometry only, 1 = limelight only
-    public static double smoothing = 0.3;       // 0 = never updates, 1 = no smoothing
-
+    // pedro + limelight are combined in GoalDistanceFilter, tune it with GoalDistanceFilterTuner
 
     // straight-line distance to the closest goal (inches) -> flywheel velocity (ticks/s)
     // placeholder values, fill these in with ShooterTuner. distances must be increasing
@@ -47,9 +46,9 @@ public class Shooter {
     private double targetVelocity = 0;
     private boolean tracking = false; // true = velocity follows distance to the goal every loop
 
-    // filtered straight-line distance from the robot to the closest goal
+    // pedro pose + limelight -> filtered straight-line distance from the robot to the closest goal center
+    private final GoalDistanceFilter distanceFilter = new GoalDistanceFilter();
     private double goalDistance = 0;
-    private boolean filterStarted = false;
 
     // raw readings from the last update, for telemetry
     private double odometryDistance = 0;
@@ -76,9 +75,10 @@ public class Shooter {
     }
 
     // velocity follows the distance to the goal until stop() or setTargetVelocity()
+    // the filter isn't reset here: it still has the last pedro pose, so it picks up where it left off
+    // and keeps the drift correction it learned from the limelight
     public void startTracking() {
         tracking = true;
-        resetFilter(); // start fresh instead of from wherever the robot was last time
     }
 
     public void stop() {
@@ -123,30 +123,25 @@ public class Shooter {
 
     // sets the target velocity from how far we are from the goal, using odometry + limelight
     // robot: follower pose
-    // limelightDistance: from Limelight.distanceToGoal(), NaN if no tag is visible
+    // limelightDistance: from Limelight.freshDistanceToGoal(), which is NaN unless the limelight gave us a
+    // frame we haven't used yet. don't pass distanceToGoal() here, that reading repeats between frames and
+    // the filter would blend the same number in over and over
     public void setVelocityFromDistance(Pose robot, Alliance alliance, double limelightDistance) {
-        odometryDistance = robot.distance(closestGoal(robot, alliance));
-        this.limelightDistance = limelightDistance;
+        Pose goal = closestGoal(robot, alliance);
+        odometryDistance = robot.distance(goal);
+        if (!Double.isNaN(limelightDistance)) this.limelightDistance = limelightDistance;
 
-        boolean tagDetected = !Double.isNaN(limelightDistance);
-
-        double distance;
-        if (tagDetected) {
-            // the limelight doesn't drift, so it gets limelightWeight when we can see a tag
-            distance = blend(odometryDistance, limelightDistance, limelightWeight);
-        } else {
-            // no tag, pinpoint only
-            distance = odometryDistance;
-        }
-
-        setVelocityFromDistance(distance);
+        // pedro dx moves the estimate, the limelight pulls it back when a tag is visible
+        goalDistance = distanceFilter.update(robot, goal, limelightDistance);
+        targetVelocity = velocityFor(goalDistance);
     }
 
-    // sets the target velocity from a single distance reading (inches), still filtered
+    // sets the target velocity from a limelight distance only (no pedro), still filtered
     public void setVelocityFromDistance(double distance) {
         if (Double.isNaN(distance)) return; // keep the last target instead of spinning at garbage
 
-        updateFilter(distance);
+        this.limelightDistance = distance;
+        goalDistance = distanceFilter.update(distance);
         targetVelocity = velocityFor(goalDistance);
     }
 
@@ -165,24 +160,27 @@ public class Shooter {
         return robot.distance(audienceGoal) < robot.distance(farGoal) ? audienceGoal : farGoal;
     }
 
-    // low pass filter, so one bad frame or a tag popping in and out doesn't jerk the flywheel
-    private void updateFilter(double distance) {
-        if (!filterStarted) {
-            goalDistance = distance;
-            filterStarted = true;
-            return;
-        }
-
-        goalDistance = blend(goalDistance, distance, smoothing);
-    }
-
+    // call after follower.setPose() mid-match, or the filter reads the jump as motion
     public void resetFilter() {
-        filterStarted = false;
+        distanceFilter.reset();
+        goalDistance = 0;
+        odometryDistance = 0;
+        limelightDistance = Double.NaN;
     }
 
-    // weight = 0 gives a, weight = 1 gives b
-    private static double blend(double a, double b, double weight) {
-        return a + weight * (b - a);
+    // how much the distance changed from pedro on the last update (inches)
+    public double getFilterDx() {
+        return distanceFilter.getDx();
+    }
+
+    // limelight readings ignored in a row for being too far from the prediction
+    public int getFilterRejects() {
+        return distanceFilter.getRejects();
+    }
+
+    // limelight frames the filter has actually blended in
+    public int getFilterCorrections() {
+        return distanceFilter.getCorrections();
     }
 
     public double getGoalDistance() {
@@ -193,7 +191,7 @@ public class Shooter {
         return odometryDistance;
     }
 
-    // NaN if no tag was seen on the last update
+    // the last limelight reading the filter was given, NaN if it hasn't had one yet
     public double getLimelightDistance() {
         return limelightDistance;
     }

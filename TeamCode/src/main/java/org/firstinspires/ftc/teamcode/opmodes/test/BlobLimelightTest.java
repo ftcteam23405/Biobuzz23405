@@ -8,7 +8,7 @@ import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.util.Alliance;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.commandbase.vision.PollenDetector;
 import org.firstinspires.ftc.teamcode.pedro.Constants;

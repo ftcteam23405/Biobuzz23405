@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.commandbase.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Latch;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Shooter;
+import org.firstinspires.ftc.teamcode.commandbase.util.Alliance;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 import java.util.List;
@@ -61,11 +62,18 @@ public class Robot {
         }
 
         follower.update();
+
+        // the limelight can only run one pipeline, so claim the tags one while the shooter is tracking
+        if (shooter.isTracking())
+            limelight.switchToShootPipeline();
+
+        // one read of the limelight per loop, everything below just uses what it cached
         limelight.periodic();
 
-        // only read tags while tracking, distanceToGoal() switches the limelight to the tags pipeline
+        // freshDistanceToGoal() is NaN unless a new tag frame came in this loop, which is what the
+        // filter wants: pedro moves the estimate every loop, the limelight corrects it once per frame
         if (shooter.isTracking())
-            shooter.setVelocityFromDistance(follower.pose(), alliance, limelight.distanceToGoal());
+            shooter.setVelocityFromDistance(follower.pose(), alliance, limelight.freshDistanceToGoal());
         shooter.periodic();
     }
 
@@ -78,6 +86,13 @@ public class Robot {
 
     public void resetHeading() {
         follower.setPose(follower.pose().withHeading(alliance == Alliance.BLUE ? Math.toRadians(180) : 0));
+    }
+
+    // call after moving the robot's position with follower.setPose(), or the distance filter reads the
+    // jump as motion. resetHeading() doesn't need it, turning in place doesn't change the distance
+    public void setPose(Pose pose) {
+        follower.setPose(pose);
+        shooter.resetFilter();
     }
 
     public CommandBuilder intake() {

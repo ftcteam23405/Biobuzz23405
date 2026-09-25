@@ -5,7 +5,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.commandbase.Alliance;
+import org.firstinspires.ftc.teamcode.commandbase.util.Alliance;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.commandbase.subsystems.Shooter;
 
@@ -59,13 +59,19 @@ public class ShooterTuner extends OpMode {
     public void start() {
         // made here instead of init() so the alliance picked during init sets the tag pipeline
         limelight = new Limelight(hardwareMap, alliance);
+        limelight.switchToShootPipeline();
         shooter = new Shooter(hardwareMap);
     }
 
     @Override
     public void loop() {
-        double distance = limelight.distanceToGoal(); // NaN if no tag
-        updateAverage(distance);
+        limelight.periodic(); // one read of the limelight per loop
+
+        double distance = limelight.distanceToGoal();            // last reading, NaN if no tag
+        double freshDistance = limelight.freshDistanceToGoal();  // NaN unless it's a new frame
+
+        // only average new frames, otherwise the same reading fills the window and the average is a lie
+        updateAverage(freshDistance);
 
         if (gamepad1.dpadUpWasPressed()) setManualVelocity(manualVelocity + step);
         if (gamepad1.dpadDownWasPressed()) setManualVelocity(manualVelocity - step);
@@ -82,9 +88,9 @@ public class ShooterTuner extends OpMode {
         if (gamepad1.xWasPressed()) record();
         if (gamepad1.backWasPressed()) points.clear();
 
-        // only update on a fresh tag, otherwise hold the last target
-        if (tableMode && !Double.isNaN(distance))
-            shooter.setVelocityFromDistance(distance);
+        // only update on a new tag frame, otherwise hold the last target
+        if (tableMode)
+            shooter.setVelocityFromDistance(freshDistance);
 
         shooter.periodic();
 
@@ -96,7 +102,8 @@ public class ShooterTuner extends OpMode {
         telemetry.addData("Distance to goal", Double.isNaN(distance) ? "no tag" : String.format(Locale.US, "%.1f in", distance));
         telemetry.addData("Averaged distance", recentDistances.isEmpty() ? "no tag" : String.format(Locale.US, "%.1f in (%d samples)", averageDistance(), recentDistances.size()));
         telemetry.addData("Visible tags", limelight.visibleTagIds());
-        telemetry.addData("Angle / Tx (deg)", "%.2f", limelight.angle());
+        telemetry.addData("Tag frames", limelight.getTagFrames());
+        telemetry.addData("Angle to goal center (deg)", "%.2f", limelight.angle());
         telemetry.addLine();
 
         //shooter telemetry
