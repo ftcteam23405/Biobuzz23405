@@ -46,6 +46,7 @@ public class Teleop extends OpMode {
 
     @Override
     public void start() { //what happens when start is pressed
+        robot.turret.startTracking(); //turret faces the closest goal for the whole match
         robot.periodic();
     }
 
@@ -97,6 +98,11 @@ public class Teleop extends OpMode {
         joinedTelemetry.addData("LoopTime Hz", robot.getLoopTimeHz());
         joinedTelemetry.addLine();
         joinedTelemetry.addData("Follower Pose", robot.follower.pose().toString());
+        joinedTelemetry.addLine();
+
+        joinedTelemetry.addData("Turret Angle", robot.turret.getAngle());
+        joinedTelemetry.addData("Turret Target", robot.turret.getTargetAngle());
+        joinedTelemetry.addData("Turret On Goal", robot.turret.atTarget());
         joinedTelemetry.addLine();
 
         joinedTelemetry.addData("Latch Closed", robot.latch.isOpen());

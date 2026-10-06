@@ -6,6 +6,8 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.teamcode.commandbase.util.Alliance;
@@ -24,7 +26,12 @@ import java.util.Map;
 @Config
 public class Limelight {
     private final Limelight3A limelight;
-    private final Alliance alliance;
+
+    private final Servo llServo;
+    public static double tagsServoPos = 0.5;
+    public static double blobServoPos = 0.5;
+
+    private Alliance alliance;
     private static final int redTags = 0, blueTags = 1, blob = 2;
     private final int tagsPipeline;
 
@@ -83,6 +90,7 @@ public class Limelight {
     public Limelight(HardwareMap hardwareMap, Alliance a) {
         alliance = a;
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        llServo = hardwareMap.get(Servo.class, "llServo");
         pollenDetector = new PollenDetector(hardwareMap, "limelight");
         tagsPipeline = alliance == Alliance.RED ? redTags : blueTags;
 
@@ -118,12 +126,14 @@ public class Limelight {
 
     public void switchToShootPipeline() {
         setPipleline(tagsPipeline);
+        llServo.setPosition(tagsServoPos);
         if (!limelight.isRunning())
             limelight.start();
     }
 
     public void switchToBlobPipeline() {
         setPipleline(blob);
+        llServo.setPosition(blobServoPos);
         if (!limelight.isRunning())
             limelight.start();
     }
