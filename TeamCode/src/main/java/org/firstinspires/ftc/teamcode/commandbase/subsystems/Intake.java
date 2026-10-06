@@ -6,6 +6,7 @@ import com.pedropathing.ivy.CommandBuilder;
 import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -18,9 +19,14 @@ public class Intake {
     public static double intakeOnSpeed = 1;
     public static double intakeReverseSpeed = -1;
 
+    private final DigitalChannel distanceSensor;
+
     public Intake(HardwareMap hardwareMap){
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        distanceSensor = hardwareMap.get(DigitalChannel.class, "distanceSensor");
+        distanceSensor.setMode(DigitalChannel.Mode.INPUT);
     }
 
     public void setPower(double power){
@@ -37,6 +43,10 @@ public class Intake {
 
     public void intakeReverse() {
         setPower(intakeReverseSpeed);
+    }
+
+    public boolean isFull() {
+        return distanceSensor.getState();
     }
 
     public CommandBuilder off() {
